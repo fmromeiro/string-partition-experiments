@@ -7,13 +7,17 @@ from typing import Callable, TypeAlias
 import pyomo.environ as pyo
 import numpy as np
 
-def direct_compare(l1, l2):
+Char: TypeAlias = int
+String: TypeAlias = list[Char]
+Block: TypeAlias = tuple[String,int,int]
+
+def direct_compare(l1: String, l2: String) -> bool:
     for idx in range(len(l1)):
         if l1[idx] != l2[idx]:
             return False
     return True
 
-def reverse_compare(l1: str, l2: str) -> bool:
+def reverse_compare(l1: String, l2: String) -> bool:
     direct_eq = True
     reverse_eq = True
     for idx in range(len(l1)):
@@ -22,16 +26,14 @@ def reverse_compare(l1: str, l2: str) -> bool:
         if not (direct_eq or reverse_eq): return False
     return direct_eq or reverse_eq
 
-Block: TypeAlias = tuple[str,int,int]
-
 class ILPModel:
 
-    def __init__(self, g1: str, g2: str, compare: Callable[[str,str],bool]):
+    def __init__(self, g1: String, g2: String, compare: Callable[[String,String],bool]):
         self.g1 = g1
         self.g2 = g2
         self.compare = compare
 
-    def find_sub(self, block: str, genome: str) -> list[int]:
+    def find_sub(self, block: String, genome: String) -> list[int]:
         l_pos = []
         start = 0
         while start <= (len(genome)-len(block)):
@@ -43,7 +45,7 @@ class ILPModel:
                 start += 1
         return l_pos
 
-    def find_blocks(self, g1: str, g2: str) -> list[Block]:
+    def find_blocks(self, g1: String, g2: String) -> list[Block]:
         B = []
 
         for i in range(len(g1)):
@@ -100,8 +102,8 @@ class ILPModel:
 # g1 = sys.argv[1].split(",")
 # g2 = sys.argv[2].split(",")
 
-letters = "ACTG"
-base = letters * 10
+seq = [1,2,3,4]
+base = seq * 10
 np.random.seed(1729)
 g1 = np.random.permutation(len(base))
 g2 = np.random.permutation(len(base))
@@ -109,8 +111,8 @@ g2 = np.random.permutation(len(base))
 g1 = [base[x] for x in g1]
 g2 = [base[x] for x in g2]
 
-print(",".join(g1))
-print(",".join(g2))
+print(g1,sep=',')
+print(g2,sep=',')
 
-model = ILPModel(g1, g2, direct_compare)
+model = ILPModel(g1, g2, reverse_compare)
 model.run()

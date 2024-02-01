@@ -99,20 +99,22 @@ class ILPModel:
             if sol_dict[b] == 1:
                 print("Block", B[b-1])
 
-# g1 = sys.argv[1].split(",")
-# g2 = sys.argv[2].split(",")
+if __name__ == '__main__':
 
-seq = [1,2,3,4]
-base = seq * 10
-np.random.seed(1729)
-g1 = np.random.permutation(len(base))
-g2 = np.random.permutation(len(base))
+    # g1 = sys.argv[1].split(",")
+    # g2 = sys.argv[2].split(",")
 
-g1 = [base[x] for x in g1]
-g2 = [base[x] for x in g2]
+    seq = [1,2,3,4]
+    base = seq * 10
+    np.random.seed(1729)
+    g1 = np.random.permutation(len(base))
+    g2 = np.random.permutation(len(base))
 
-print(g1,sep=',')
-print(g2,sep=',')
+    g1 = [base[x] for x in g1]
+    g2 = [base[x] for x in g2]
 
-model = ILPModel(g1, g2, reverse_compare)
-model.run()
+    print(g1,sep=',')
+    print(g2,sep=',')
+
+    model = ILPModel(g1, g2, reverse_compare)
+    model.run()

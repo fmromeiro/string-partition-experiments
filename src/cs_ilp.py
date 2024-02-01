@@ -28,10 +28,12 @@ def reverse_compare(l1: String, l2: String) -> bool:
 
 class ILPModel:
 
-    def __init__(self, g1: String, g2: String, compare: Callable[[String,String],bool]):
+    def __init__(self, g1: String, g2: String,
+                 compare: Callable[[String,String],bool], reverse:bool):
         self.g1 = g1
         self.g2 = g2
         self.compare = compare
+        self.reverse = reverse
 
     def find_sub(self, block: String, genome: String) -> list[int]:
         l_pos = []
@@ -57,8 +59,7 @@ class ILPModel:
                 if block in B:
                     B1[block].append(i)
                     continue
-                # enable this if only if doing RCMSP
-                if (t := tuple(reversed(block))) in B:
+                if self.reverse and (t := tuple(reversed(block))) in B:
                     B1[t].append(i)
                     continue
 
@@ -128,8 +129,6 @@ class ILPModel:
             expr = sum(model.y1[i] for i in model.n1),
             sense = pyo.minimize)
 
-        model.pprint()
-
         opt = pyo.SolverFactory('cplex')
         result_obj = opt.solve(model, tee=True)
 
@@ -139,20 +138,22 @@ class ILPModel:
             if sol_dict[b] == 1:
                 print("Block", model.l1[b], b,sol_dict[b])
 
-# g1 = sys.argv[1].split(",")
-# g2 = sys.argv[2].split(",")
+if __name__ == '__main__':
 
-seq = [1,2,3,4]
-base = seq * 50
-np.random.seed(1729)
-g1 = np.random.permutation(len(base))
-g2 = np.random.permutation(len(base))
+    # g1 = sys.argv[1].split(",")
+    # g2 = sys.argv[2].split(",")
 
-g1 = [base[x] for x in g1]
-g2 = [base[x] for x in g2]
+    seq = [1,2,3,4]
+    base = seq * 50
+    np.random.seed(1729)
+    g1 = np.random.permutation(len(base))
+    g2 = np.random.permutation(len(base))
 
-print(g1,sep=',')
-print(g2,sep=',')
+    g1 = [base[x] for x in g1]
+    g2 = [base[x] for x in g2]
 
-model = ILPModel(g1, g2, reverse_compare)
-model.run()
+    print(g1,sep=',')
+    print(g2,sep=',')
+
+    model = ILPModel(g1, g2, reverse_compare, True)
+    model.run()

@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import sys
 
-from src import cb_ilp, cs_ilp
+from src import grb_cb_ilp, grb_cs_ilp
 
 def _parse_args():
     parser = argparse.ArgumentParser(
@@ -39,17 +39,17 @@ def main():
         filename = filename if args.reverse else filename[1:]
 
         if args.impl == 'cb':
-            comp = (cb_ilp.reverse_compare
+            comp = (grb_cb_ilp.reverse_compare
                     if args.reverse
-                    else cb_ilp.direct_compare)
+                    else grb_cb_ilp.direct_compare)
             with open(f'logs/cb_{filename}.log', 'w') as sys.stdout:
-                cb_ilp.ILPModel(s1,s2,comp).run()
+                grb_cb_ilp.ILPModel(s1,s2,comp).run()
         else:
-            comp = (cs_ilp.reverse_compare
+            comp = (grb_cs_ilp.reverse_compare
                     if args.reverse
-                    else cs_ilp.direct_compare)
+                    else grb_cs_ilp.direct_compare)
             with open(f'logs/cs_{filename}.log', 'w') as sys.stdout:
-                cs_ilp.ILPModel(s1,s2,comp,args.reverse).run()
+                grb_cs_ilp.ILPModel(s1,s2,comp,args.reverse).run()
 
 if __name__ == '__main__':
     main()

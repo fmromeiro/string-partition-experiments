@@ -3,7 +3,7 @@
 # integer linear programming models for the minimum common string partition
 # problem. Optimization Letters, v. 10, p. 189-205, 2016.
 
-from itertools import chain
+from itertools import product
 from typing import Callable, TypeAlias
 
 import gurobipy as gp
@@ -78,57 +78,66 @@ class ILPModel:
                     break
         return (B1,B2)
 
-    def _add_vars(self, B, nB):
-        y = dict()
-        for t, ks in B.items():
-            y[t] = dict()
-            for k in ks:
-                y[t][k] = self.model.addVar(0,1,nB % 2,GRB.BINARY,f'y{nB}_{t}_{k}')
-        return y
+    def match_blocks(self, B1, B2):
+        B = []
+        for t in B1:
+            B.extend(product((t,),B1[t],B2[t]))
+        return B
 
-    def _add_char_constrs(self,B,y,nB):
+    def _add_vars(self):
+        x = []
+        for t, k1, k2 in self.B:
+            x.append(self.model.addVar(0,1,0,GRB.BINARY,f'x_{t}_{k1}_{k2}'))
+        return x
+
+    def _add_char_constrs(self,nB):
+        b = nB - 1
         for j in range(len(self.g1)):
             expr = sum(
-                sum(y[t][k]
-                    for k in ks
-                    if k <= j < k + len(t))
-                for t, ks in B.items())
-            self.model.addConstr(expr == 1,f'unicidade de char {j} na str {nB}')
+                self.x[i]
+                for i, (t,*k) in enumerate(self.B)
+                if k[b] <= j < k[b] + len(t))
+            self.model.addConstr(expr <= 1,f'unicidade de char {j} na str {nB}')
+
+    def _add_objective(self):
+        expr = gp.LinExpr()
+        expr += len(self.g1)
+        for (t,_,_), x in zip(self.B,self.x):
+            expr += (1 - len(t)) * x
+        self.model.setObjective(expr, GRB.MINIMIZE)
 
     def formulate(self):
         self.model = gp.Model('(Reverse) Common Minimum String Partition Program')
         self.model.Params.TimeLimit = 3600
         self.model.Params.Threads = 1
-        self.model.ModelSense = GRB.MINIMIZE
+        # self.model.ModelSense = GRB.MINIMIZE
 
-        self.B1, self.B2 = self.find_blocks(self.g1, self.g2)
+        B1, B2 = self.find_blocks(self.g1, self.g2)
+        self.B = self.match_blocks(B1, B2)
+        self.B = [(t,k1,k2) for (t,k1,k2) in self.B if len(t) > 1]
 
-        self.y1 = self._add_vars(self.B1, 1)
-        self.y2 = self._add_vars(self.B2, 2)
-        
-        self._add_char_constrs(self.B1,self.y1,1)
-        self._add_char_constrs(self.B2,self.y2,2)
-        
-        for t in self.B1:
-            self.model.addConstr(
-                sum(self.y1[t].values()) == sum(self.y2[t].values()))
+        self.x = self._add_vars()
+
+        self._add_char_constrs(1)
+        self._add_char_constrs(2)
+
+        self._add_objective()
 
     def optimize(self):
         try:
             self.model.optimize()
-            self. sol = []
-            for t, ks in self.B1.items():
-                for k in ks:
-                    if self.y1[t][k].X > 1 - EPS:
-                        self.sol.append((t,k))
+            self.sol = []
+            for i, v in enumerate(self.B):
+                if self.x[i].X > 1 - EPS:
+                    self.sol.append(v)
         except gp.GurobiError as e:
             print('Error code ' + str(e.errno) + ': ' + str(e))
         except AttributeError:
             print('Encountered an attribute error')
 
     def log_solution(self):
-        for (t,k) in self.sol:
-            print(f'Block {t} at {k}')
+        for (t,k1,_) in self.sol:
+            print(f'Block {t} at {k1}')
 
     def log_stats(self):
         print('### ESTATISTICAS')
@@ -143,11 +152,11 @@ class ILPModel:
 
 if __name__ == '__main__':
 
-    # g1 = sys.argv[1].split(",")
-    # g2 = sys.argv[2].split(",")
+    # # g1 = sys.argv[1].split(",")
+    # # g2 = sys.argv[2].split(",")
 
     # seq = [1,2,3,4]
-    # base = seq * 2
+    # base = seq * 50
     # np.random.seed(1729)
     # g1 = np.random.permutation(len(base))
     # g2 = np.random.permutation(len(base))

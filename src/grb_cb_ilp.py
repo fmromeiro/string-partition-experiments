@@ -125,31 +125,41 @@ class ILPModel:
         except AttributeError:
             print('Encountered an attribute error')
 
-    def get_solution(self):
+    def log_solution(self):
         for (t,k1,_) in self.sol:
             print(f'Block {t} at {k1}')
+
+    def log_stats(self):
+        print('### ESTATISTICAS')
+        print(f'Quantidade de blocos: {self.model.ObjVal}')
+        print(f'Tempo de execução: {self.model.Runtime}')
 
     def run(self):
         self.formulate()
         self.optimize()
-        self.get_solution()
+        self.log_solution()
+        self.log_stats()
 
 if __name__ == '__main__':
 
-    # g1 = sys.argv[1].split(",")
-    # g2 = sys.argv[2].split(",")
+    # # g1 = sys.argv[1].split(",")
+    # # g2 = sys.argv[2].split(",")
 
-    seq = [1,2,3,4]
-    base = seq * 50
-    np.random.seed(1729)
-    g1 = np.random.permutation(len(base))
-    g2 = np.random.permutation(len(base))
+    # seq = [1,2,3,4]
+    # base = seq * 50
+    # np.random.seed(1729)
+    # g1 = np.random.permutation(len(base))
+    # g2 = np.random.permutation(len(base))
 
-    g1 = [base[x] for x in g1]
-    g2 = [base[x] for x in g2]
+    # g1 = [base[x] for x in g1]
+    # g2 = [base[x] for x in g2]
 
-    print(g1,sep=',')
-    print(g2,sep=',')
+    # print(g1,sep=',')
+    # print(g2,sep=',')
+
+    input()
+    g1 = list(map(int, input().split()))
+    g2 = list(map(int, input().split()))
 
     model = ILPModel(g1, g2, reverse_compare, True)
     model.run()

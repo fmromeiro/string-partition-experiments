@@ -83,7 +83,8 @@ class ILPModel:
         for t, ks in B.items():
             y[t] = dict()
             for k in ks:
-                y[t][k] = self.model.addVar(0,1,nB % 2,GRB.BINARY,f'y{nB}_{t}_{k}')
+                y[t][k] = self.model.addVar(
+                    0,1,0,GRB.BINARY,f'y{nB}_{t}_{k}')
         return y
 
     def _add_char_constrs(self,B,y,nB):
@@ -93,21 +94,33 @@ class ILPModel:
                     for k in ks
                     if k <= j < k + len(t))
                 for t, ks in B.items())
-            self.model.addConstr(expr == 1,f'unicidade de char {j} na str {nB}')
+            self.model.addConstr(expr <= 1,f'unicidade de char {j} na str {nB}')
+
+    def _add_objective(self):
+        expr = gp.LinExpr()
+        expr += len(self.g1)
+        for t, ks in self.y1.items():
+            for _, yk in ks.items():
+                expr += (1 - len(t)) * yk
+        self.model.setObjective(expr, GRB.MINIMIZE)
 
     def formulate(self):
         self.model = gp.Model('(Reverse) Common Minimum String Partition Program')
         self.model.Params.TimeLimit = 3600
         self.model.Params.Threads = 1
-        self.model.ModelSense = GRB.MINIMIZE
+        # self.model.ModelSense = GRB.MINIMIZE
 
         self.B1, self.B2 = self.find_blocks(self.g1, self.g2)
+        self.B1 = {t:ks for t,ks in self.B1.items() if len(t) > 1}
+        self.B2 = {t:ks for t,ks in self.B2.items() if len(t) > 1}
 
         self.y1 = self._add_vars(self.B1, 1)
         self.y2 = self._add_vars(self.B2, 2)
         
         self._add_char_constrs(self.B1,self.y1,1)
         self._add_char_constrs(self.B2,self.y2,2)
+
+        self._add_objective()
         
         for t in self.B1:
             self.model.addConstr(

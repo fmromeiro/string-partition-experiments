@@ -25,7 +25,8 @@ def main():
     if args.lst < args.fst:
         raise Exception('fst and lst must indicate a valid test range')
     
-    os.makedirs('logs', exist_ok=True)
+    log_dir = os.path.join('logs', args.impl)
+    os.makedirs(log_dir, exist_ok=True)
 
     for i in range(args.fst,args.lst + 1):
         filename = next(f
@@ -41,12 +42,12 @@ def main():
 
         mod = 'mod' in args.impl
         if 'cb' in args.impl:
-            with open(f'logs/{args.impl}_{filename}.log', 'w') as sys.stdout:
+            with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
                 (blocks_ilp
                  .Block_ILP(s1,s2,blocks.compare,args.reverse,mod)
                  .run())
         else:
-            with open(f'logs/{args.impl}_{filename}.log', 'w') as sys.stdout:
+            with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
                 (substring_ilp
                  .Substring_ILP(s1,s2,blocks.compare,args.reverse,mod)
                  .run())

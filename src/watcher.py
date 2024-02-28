@@ -17,6 +17,6 @@ class Watcher:
             self.first_found = True
         
         if self.comp(
-            (obj := model.cbGet(GRB.Callback.MIPSOL_OBJ)), self.last_sol):
-            self.last_sol = obj
+            model.cbGet(GRB.Callback.MIPSOL_OBJ), self.last_sol):
+            self.last_sol = model.cbGet(GRB.Callback.MIPSOL_OBJ)
             self.last_time = model.cbGet(GRB.Callback.RUNTIME)

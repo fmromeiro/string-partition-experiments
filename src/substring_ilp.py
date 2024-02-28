@@ -14,6 +14,7 @@ class Substring_ILP:
         self.reverse = reverse
         self.mod = mod
         self.limit = limit
+        self.sol = []
 
     def _add_vars(self, B, nB):
         y = dict()
@@ -70,7 +71,7 @@ class Substring_ILP:
     def optimize(self):
         self.watcher = Watcher(float('inf'), lambda x, y: x < y)
         try:
-            self.model.optimize(self.watcher.callback)
+            self.model.optimize(lambda model,where: self.watcher.callback(model, where))
             self. sol = []
             for t, ks in self.B1.items():
                 for k in ks:

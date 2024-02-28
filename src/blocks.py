@@ -31,8 +31,8 @@ def find_substrings(l1, l2, compare, reverse = False):
             if t in B:
                 B1[t].append(i)
                 continue
-            elif reverse and (t_ := tuple(reversed(t))) in B:
-                B1[t_].append(i)
+            elif reverse and tuple(reversed(t)) in B:
+                B1[tuple(reversed(t))].append(i)
                 continue
 
             pos = find_sub(t, l2, compare, reverse)

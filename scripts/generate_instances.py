@@ -4,7 +4,7 @@ import os
 from generator import generate, swap, reverse
 
 def main():
-    ns = list(range(100,601,20))
+    ns = list(range(100,1001,100))
     ns += list(range(2_000,20_001,2_000))
     chars = [4,20,36,52]
     seed = 1

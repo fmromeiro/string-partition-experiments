@@ -4,7 +4,8 @@ from pathlib import Path
 import re
 import sys
 
-from src import blocks, blocks_ilp, substring_ilp
+from src.ilp import Block_ILP, Substring_ILP
+from src.utils import blocks
 
 def _parse_args():
     parser = argparse.ArgumentParser(
@@ -13,9 +14,9 @@ def _parse_args():
                         help='cb uses the common block based implementation, '
                         'cs uses the common substring one')
     parser.add_argument('fst', type=int, choices=range(1,145), metavar='fst',
-                        help='first of the tests to be run [1-144]')
+                        help='first of the tests to be run [1-80]')
     parser.add_argument('lst', type=int, choices=range(1,145), metavar='lst',
-                        help='last of the tests to be run [1-144]')
+                        help='last of the tests to be run [1-80]')
     parser.add_argument('-r', '--reverse', action='store_true')
     args = parser.parse_args()
     return args
@@ -41,16 +42,9 @@ def main():
         filename = filename if args.reverse else filename[1:]
 
         mod = 'mod' in args.impl
-        if 'cb' in args.impl:
-            with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
-                (blocks_ilp
-                 .Block_ILP(s1,s2,blocks.compare,args.reverse,mod)
-                 .run())
-        else:
-            with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
-                (substring_ilp
-                 .Substring_ILP(s1,s2,blocks.compare,args.reverse,mod)
-                 .run())
+        impl = Block_ILP if 'cb' in args.impl else Substring_ILP
+        with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
+            impl(s1,s2,blocks.compare,args.reverse,mod).run()
 
 if __name__ == '__main__':
     main()

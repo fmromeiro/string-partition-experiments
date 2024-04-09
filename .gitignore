@@ -162,3 +162,5 @@ cython_debug/
 instances/
 .vscode/
 logs/
+graphs/
+results/

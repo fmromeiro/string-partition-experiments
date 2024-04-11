@@ -1,12 +1,23 @@
 from itertools import product
 
 def compare(l1, l2, reverse):
-    # if len(l1) != len(l2): return False
     dir_comp = True
     rev_comp = reverse
     for i in range(len(l1)):
         dir_comp = dir_comp and l1[i] == l2[i]
         rev_comp = rev_comp and l1[i] == l2[-i-1]
+        if not (dir_comp or rev_comp): return False
+    return True
+
+def signaled_compare(l1, l2, reverse):
+    dir_comp = True
+    rev_comp = True
+    for i in range(len(l1)):
+        dir_comp = dir_comp and l1[i] == l2[i]
+        if i == len(l2) - i - 1:
+            rev_comp = rev_comp and l1[i] == abs(l2[-i-1])
+        else:
+            rev_comp = rev_comp and l1[i] == -l2[-i-1]
         if not (dir_comp or rev_comp): return False
     return True
 
@@ -19,7 +30,7 @@ def find_sub(block, string, compare, reverse):
         start += 1
     return l_pos
 
-def find_substrings(l1, l2, compare, reverse = False):
+def find_substrings(l1, l2, compare, reverse = False, signaled = False):
     B = set()
     B1 = dict()
     B2 = dict()
@@ -30,6 +41,9 @@ def find_substrings(l1, l2, compare, reverse = False):
 
             if t in B:
                 B1[t].append(i)
+                continue
+            elif signaled and (t_ := tuple(-x for x in reversed(t))) in B:
+                B1[t_].append(i)
                 continue
             elif reverse and (t_ := tuple(reversed(t))) in B:
                 B1[t_].append(i)

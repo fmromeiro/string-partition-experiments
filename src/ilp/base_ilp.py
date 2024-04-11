@@ -7,11 +7,13 @@ from .watcher import Watcher
 EPS = 1e-4
 
 class BaseILP(abc.ABC):
-    def __init__(self, l1, l2, compare, reverse, limit=3600):
+    def __init__(self, l1, l2, compare, reverse, signaled, balanced, limit=3600):
         self.l1 = l1
         self.l2 = l2
         self.compare = compare
-        self.reverse = reverse
+        self.reverse = signaled
+        self.signaled = signaled
+        self.balanced = balanced
         self.limit = limit
         self.sol = []
 
@@ -63,6 +65,12 @@ class BaseILP(abc.ABC):
         print(f'last_time: {self.watcher.last_time}')
         print(f'gap: {self.model.MIPGap}')
         print(f'best_bd: {self.model.ObjBoundC}')
+
+    def _log_stats_dummy(self, stats):
+        print('### ESTATISTICAS')
+        for stat in ('runtime','first_sol','first_time','last_sol','last_time',
+                     'gap','best_bd'):
+            print(f'{stat}: {stats.get(stat, 0)}')
 
     def run(self):
         self.formulate()

@@ -18,6 +18,8 @@ def _parse_args():
     parser.add_argument('lst', type=int, choices=range(1,145), metavar='lst',
                         help='last of the tests to be run [1-80]')
     parser.add_argument('-r', '--reverse', action='store_true')
+    parser.add_argument('-u', '--unbalanced', action='store_true')
+    parser.add_argument('-s', '--signaled', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -43,8 +45,9 @@ def main():
 
         mod = 'mod' in args.impl
         impl = Block_ILP if 'cb' in args.impl else Substring_ILP
+        comp = blocks.signaled_compare if args.signaled else blocks.compare
         with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
-            impl(s1,s2,blocks.compare,args.reverse,mod).run()
+            impl(s1,s2,comp,args.reverse,args.signaled,not args.unbalanced,mod).run()
 
 if __name__ == '__main__':
     main()

@@ -2,16 +2,18 @@ import gurobipy as gp
 from gurobipy import GRB
 
 from .base_ilp import BaseILP, EPS
-from ..utils.blocks import find_substrings, substrings_to_blocks, compare
+from ..utils.inter import find_substrings, substrings_to_blocks, compare
 
 
 class Block_ILP(BaseILP):
-    def __init__(self, l1, l2, compare, reverse, signaled, balanced, mod, limit=3600):
-        super().__init__(l1,l2,compare,reverse,signaled,limit)
+    def __init__(self, l1, l2, compare, reverse, signaled, balanced, mod,
+                 intergenic=False, i1=None, i2=None, limit=3600):
+        super().__init__(l1,l2,compare,reverse,signaled,intergenic,i1,i2,limit)
         self.balanced = balanced
         self.mod = mod or not self.balanced
 
-        B1, B2 = find_substrings(self.l1, self.l2, self.compare, self.reverse, self.signaled)
+        B1, B2 = find_substrings(self.l1, self.l2, self.i1, self.i2,
+                                 self.compare, self.reverse, self.signaled)
         self.B = substrings_to_blocks(B1, B2)
         if self.mod:
             self.B = [b for b in self.B if len(b[0]) > 1]
@@ -65,7 +67,7 @@ class Block_ILP(BaseILP):
         self.sol = []
         for i, v in enumerate(self.B):
             if self.x[i].X > 1 - EPS:
-                self.sol.append((v[0],v[1]))
+                self.sol.append((v[0],(v[1],v[2])))
 
     def run(self):
         if not self.B:

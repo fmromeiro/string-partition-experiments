@@ -6,8 +6,9 @@ from ..utils.blocks import compare, find_substrings
 
 
 class Substring_ILP(BaseILP):
-    def __init__(self, l1, l2, compare, reverse, signaled, balanced, mod, limit=3600):
-        super().__init__(l1,l2,compare,reverse,signaled,limit)
+    def __init__(self, l1, l2, compare, reverse, signaled, balanced, mod,
+                 intergenic=False, i1=None, i2=None, limit=3600):
+        super().__init__(l1,l2,compare,reverse,signaled,intergenic,i1,i2,limit)
         self.balanced = balanced
         self.mod = mod or not self.balanced
 

@@ -5,7 +5,7 @@ import re
 import sys
 
 from src.ilp import Block_ILP, Substring_ILP
-from src.utils import blocks
+from src.utils import blocks, inter
 
 def _parse_args():
     parser = argparse.ArgumentParser(
@@ -45,7 +45,7 @@ def main():
 
         mod = 'mod' in args.impl
         impl = Block_ILP if 'cb' in args.impl else Substring_ILP
-        comp = blocks.signaled_compare if args.signaled else blocks.compare
+        comp = inter.signaled_compare if args.signaled else inter.compare
         with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
             impl(s1,s2,comp,args.reverse,args.signaled,not args.unbalanced,mod).run()
 

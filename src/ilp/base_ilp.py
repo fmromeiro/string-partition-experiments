@@ -7,13 +7,19 @@ from .watcher import Watcher
 EPS = 1e-4
 
 class BaseILP(abc.ABC):
-    def __init__(self, l1, l2, compare, reverse, signaled, balanced, limit=3600):
+    def __init__(self, l1, l2, compare, reverse, signaled, intergenic, i1=None, i2=None, limit=3600):
         self.l1 = l1
         self.l2 = l2
         self.compare = compare
-        self.reverse = signaled
+        self.reverse = reverse
         self.signaled = signaled
-        self.balanced = balanced
+        self.intergenic = intergenic and i1 and i2
+        if self.intergenic:
+            self.i1 = i1
+            self.i2 = i2
+        else:
+            self.i1 = [0] * (len(l1) - 1)
+            self.i2 = [0] * (len(l2) - 1)
         self.limit = limit
         self.sol = []
 

@@ -41,23 +41,26 @@ def main():
         comp = inter.signaled_compare # if args.signaled else inter.compare
         with open(f'instances/{filename}.in') as f:
             lines = f.readlines()
+            file_suffix = "-".join(filename.split("-")[1:])
             i = 0
             while i < len(lines) // 4:
                 s1 = list(map(int, lines[i*4].split()))
                 i1 = list(map(int, lines[i*4 + 1].split()))[1:-1]
                 s2 = list(map(int, lines[i*4 + 2].split()))
                 i2 = list(map(int, lines[i*4 + 3].split()))[1:-1]
+                filename = f'smcisp-{i:02d}-{file_suffix}'
                 with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
                     t = default_timer()
                     impl(s1,s2,comp,False,True,True,mod,True, i1,i2).run()
                     print(f'total_time: {default_timer()-t}')
                 i1 = [0] * len(i1)
                 i2 = [0] * len(i2)
-                filename = f'smcsp-{"-".join(filename.split("-")[1:])}'
+                filename = f'smcsp-{i:02d}-{file_suffix}'
                 with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
                     t = default_timer()
                     impl(s1,s2,comp,False,True,True,mod,True, i1,i2).run()
                     print(f'total_time: {default_timer()-t}')
+                i += 1
 
 if __name__ == '__main__':
     main()

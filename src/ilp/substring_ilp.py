@@ -2,7 +2,7 @@ import gurobipy as gp
 from gurobipy import GRB
 
 from .base_ilp import BaseILP, EPS
-from ..utils.blocks import compare, find_substrings
+from ..utils.inter import compare, find_substrings
 
 
 class Substring_ILP(BaseILP):
@@ -12,7 +12,7 @@ class Substring_ILP(BaseILP):
         self.balanced = balanced
         self.mod = mod or not self.balanced
 
-        self.B1, self.B2 = find_substrings(self.l1, self.l2, self.compare,
+        self.B1, self.B2 = find_substrings(self.l1, self.l2,self.i1, self.i2, self.compare,
                                         self.reverse, self.signaled)
         if self.mod:
             self.B1 = {t:ks for t,ks in self.B1.items() if len(t) > 1}

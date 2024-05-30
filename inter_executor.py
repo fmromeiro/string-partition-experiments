@@ -30,7 +30,7 @@ def main():
     os.makedirs(log_dir, exist_ok=True)
 
     files = (f for f in os.listdir('instances')
-             if re.match(rf'smcisp-', f))
+             if re.match(rf'smcisp-2000-4-2000', f))
     for filename in files:
         filename = Path(filename).stem
 
@@ -38,7 +38,7 @@ def main():
 
         mod = 'mod' in args.impl
         impl = Block_ILP if 'cb' in args.impl else Substring_ILP
-        comp = inter.signaled_compare # if args.signaled else inter.compare
+        comp = inter.signaled_flex_compare # if args.signaled else inter.compare
         with open(f'instances/{filename}.in') as f:
             lines = f.readlines()
             file_suffix = "-".join(filename.split("-")[1:])
@@ -48,18 +48,22 @@ def main():
                 i1 = list(map(int, lines[i*4 + 1].split()))[1:-1]
                 s2 = list(map(int, lines[i*4 + 2].split()))
                 i2 = list(map(int, lines[i*4 + 3].split()))[1:-1]
-                filename = f'smcisp-{i:02d}-{file_suffix}'
+                i2l = [round(0.7 * x) for x in i2]
+                i2u = [round(1.3 * x) for x in i2]
+                i2 = list(zip(i2l, i2u))
+                filename = f'smcfisp-{i:02d}-{file_suffix}-07'
                 with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
+                    # print(i2)
                     t = default_timer()
                     impl(s1,s2,comp,False,True,True,mod,True, i1,i2).run()
                     print(f'total_time: {default_timer()-t}')
-                i1 = [0] * len(i1)
-                i2 = [0] * len(i2)
-                filename = f'smcsp-{i:02d}-{file_suffix}'
-                with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
-                    t = default_timer()
-                    impl(s1,s2,comp,False,True,True,mod,True, i1,i2).run()
-                    print(f'total_time: {default_timer()-t}')
+                # i1 = [0] * len(i1)
+                # i2 = [(0,0)] * len(i2)
+                # filename = f'smcsp-{i:02d}-{file_suffix}'
+                # with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
+                #     t = default_timer()
+                #     impl(s1,s2,comp,False,True,True,mod,True, i1,i2).run()
+                #     print(f'total_time: {default_timer()-t}')
                 i += 1
 
 if __name__ == '__main__':

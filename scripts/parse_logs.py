@@ -80,9 +80,6 @@ def generate_graphs():
             plt.savefig(f'graphs/rcmsp_{col}_upper_{n_chars}.png',dpi=150)
             plt.clf()
 
-
-
-
 def main():
     impls = ('cb', 'cb-mod', 'cs', 'cs-mod')
     for impl in impls:
@@ -92,4 +89,4 @@ def main():
 if __name__ == '__main__':
     os.makedirs(RESULTS_DIR, exist_ok=True)
     main()
-    generate_graphs()
+    # generate_graphs()

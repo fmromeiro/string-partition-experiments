@@ -2,7 +2,8 @@ import gurobipy as gp
 from gurobipy import GRB
 
 from .base_ilp import BaseILP, EPS
-from ..utils.inter import find_substrings, substrings_to_blocks, compare
+from ..utils.inter import (find_substrings, substrings_to_blocks, compare,
+                           get_abundant_chars, get_exclusive_blocks)
 
 
 class Block_ILP(BaseILP):
@@ -10,11 +11,14 @@ class Block_ILP(BaseILP):
                  intergenic=False, i1=None, i2=None, limit=3600):
         super().__init__(l1,l2,compare,reverse,signaled,intergenic,i1,i2,limit)
         self.balanced = balanced
-        self.mod = mod or not self.balanced
+        self.mod = self.balanced and mod
 
         B1, B2 = find_substrings(self.l1, self.l2, self.i1, self.i2,
                                  self.compare, self.reverse, self.signaled)
         self.B = substrings_to_blocks(B1, B2)
+        excl1, excl2 = get_abundant_chars(self.l1, self.l2)
+        self.E1 = get_exclusive_blocks(self.l1, excl1)
+        self.E2 = get_exclusive_blocks(self.l2, excl2)
         if self.mod:
             self.B = [b for b in self.B if len(b[0]) > 1]
 
@@ -25,6 +29,12 @@ class Block_ILP(BaseILP):
                 self.x[i]
                 for i, (t,*k) in enumerate(self.B)
                 if k[b] <= j < k[b] + len(t))
+            if not self.balanced:
+                E, y = (self.E1, self.y1) if nB == 1 else (self.E2, self.y2)
+                expr += sum(
+                    y[i]
+                    for i, (t, k) in enumerate(E)
+                    if k <= j < k + len(t))
             self.model.addConstr(expr <= 1 if self.mod else expr == 1,
                                  f'unicidade de char {j} na str {nB}')
 
@@ -33,6 +43,13 @@ class Block_ILP(BaseILP):
         for t, k1, k2 in self.B:
             self.x.append(
                 self.model.addVar(0, 1, 1, GRB.BINARY, f'x_{t}_{k1}_{k2}'))
+        if not self.balanced:
+            self.y1 = []
+            self.y2 = []
+            for t, k in self.E1:
+                self.y1.append(self.model.addVar(0,1,1,GRB.BINARY, f'y1_{t}_{k}'))
+            for t, k in self.E2:
+                self.y2.append(self.model.addVar(0,1,1,GRB.BINARY, f'y2_{t}_{k}'))
 
     def _add_constraints(self):
         self._add_char_constrs(1)
@@ -54,10 +71,7 @@ class Block_ILP(BaseILP):
         if not self.mod: return
 
         expr = gp.LinExpr()
-        if self.balanced:
-            expr += len(self.l1)
-        else:
-            expr += self._count_rare_markers()
+        expr += len(self.l1)
 
         for (t,_,_), x in zip(self.B,self.x):
             expr += (1 - len(t)) * x

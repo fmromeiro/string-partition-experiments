@@ -2,7 +2,8 @@ import gurobipy as gp
 from gurobipy import GRB
 
 from .base_ilp import BaseILP, EPS
-from ..utils.inter import compare, find_substrings
+from ..utils.inter import (compare, find_substrings, get_abundant_chars,
+                           get_exclusive_blocks)
 
 
 class Substring_ILP(BaseILP):
@@ -10,10 +11,13 @@ class Substring_ILP(BaseILP):
                  intergenic=False, i1=None, i2=None, limit=3600):
         super().__init__(l1,l2,compare,reverse,signaled,intergenic,i1,i2,limit)
         self.balanced = balanced
-        self.mod = mod or not self.balanced
+        self.mod = self.balanced and mod
 
         self.B1, self.B2 = find_substrings(self.l1, self.l2,self.i1, self.i2, self.compare,
                                         self.reverse, self.signaled)
+        excl1, excl2 = get_abundant_chars(self.l1, self.l2)
+        self.E1 = get_exclusive_blocks(self.l1, excl1)
+        self.E2 = get_exclusive_blocks(self.l2, excl2)
         if self.mod:
             self.B1 = {t:ks for t,ks in self.B1.items() if len(t) > 1}
             self.B2 = {t:ks for t,ks in self.B2.items() if len(t) > 1}
@@ -26,6 +30,15 @@ class Substring_ILP(BaseILP):
                 y[t][k] = self.model.addVar(
                     0,1,1 if nB == 1 else 0,GRB.BINARY,f'y{nB}_{t}_{k}')
         return y
+    
+    def _add_exclusive_vars(self):
+        if not self.balanced:
+            self.x1 = []
+            self.x2 = []
+            for t, k in self.E1:
+                self.x1.append(self.model.addVar(0,1,1,GRB.BINARY, f'x1_{t}_{k}'))
+            for t, k in self.E2:
+                self.x2.append(self.model.addVar(0,1,1,GRB.BINARY, f'x2_{t}_{k}'))
 
     def _add_char_constrs(self,B,y,nB):
         for j in range(len(self.l1)):
@@ -34,6 +47,12 @@ class Substring_ILP(BaseILP):
                     for k in ks
                     if k <= j < k + len(t))
                 for t, ks in B.items())
+            if not self.balanced:
+                E, x = (self.E1, self.y1) if nB == 1 else (self.E2, self.y2)
+                expr += sum(
+                    x[i]
+                    for i, (t, k) in enumerate(E)
+                    if k <= j < k + len(t))
             self.model.addConstr(
                 expr <= 1 if self.mod else expr == 1,
                 f'unicidade de char {j} na str {nB}')
@@ -41,6 +60,7 @@ class Substring_ILP(BaseILP):
     def _add_variables(self):
         self.y1 = self._add_vars(self.B1, 1)
         self.y2 = self._add_vars(self.B2, 2)
+        self._add_exclusive_vars()
 
     def _add_constraints(self):
         self._add_char_constrs(self.B1,self.y1,1)

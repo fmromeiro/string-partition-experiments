@@ -16,7 +16,7 @@ def run_tests_for_impl(impl, log_dir):
     intergenic = True
     
     files = (f for f in os.listdir('instances'))
-            #  if re.match(rf'smcisp-2000-4-2000-1', f))
+            #  if re.match(rf'smcisp-1250-04-1000-06', f))
             #  if re.match(rf'test-', f))
     for filename in files:
         filename = Path(filename).stem
@@ -33,7 +33,17 @@ def run_tests_for_impl(impl, log_dir):
                 i1 = list(map(int, lines[i*4 + 1].split()))[1:-1]
                 s2 = list(map(int, lines[i*4 + 2].split()))
                 i2 = list(map(int, lines[i*4 + 3].split()))[1:-1]
+
                 comp = inter.signaled_compare
+                i1_ = [0] * len(i1)
+                i2_ = [0] * len(i2)
+                filename = f'smcfisp-{i:02d}-{file_suffix}-N'
+                with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
+                    t = default_timer()
+                    impl(s1,s2,comp,reverse,signaled,balanced,mod,intergenic,
+                         i1_,i2_).run()
+                    print(f'total_time: {default_timer()-t}')
+
                 filename = f'smcfisp-{i:02d}-{file_suffix}-0'
                 with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
                     t = default_timer()
@@ -53,16 +63,6 @@ def run_tests_for_impl(impl, log_dir):
                         impl(s1,s2,comp,reverse,signaled,balanced,mod,
                              intergenic,i1,i2_).run()
                         print(f'total_time: {default_timer()-t}')
-
-                comp = inter.signaled_compare
-                i1 = [0] * len(i1)
-                i2 = [0] * len(i2)
-                filename = f'smcfisp-{i:02d}-{file_suffix}-N'
-                with open(f'{log_dir}/{filename}.log', 'w') as sys.stdout:
-                    t = default_timer()
-                    impl(s1,s2,comp,reverse,signaled,balanced,mod,intergenic,
-                         i1,i2).run()
-                    print(f'total_time: {default_timer()-t}')
 
                 i += 1
 

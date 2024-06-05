@@ -79,10 +79,44 @@ def find_substrings(l1, l2, i1, i2, compare, reverse = False, signaled = False):
 
     return (B1, B2)
 
+def find_substrings2(l1, l2, i1, i2, compare, reverse = False, signaled = False):
+    B = set()
+    B1 = dict()
+    B2 = dict()
+
+    for i in range(len(l1)):
+        for j in range(i, len(l1)):
+            # print(f'{i}:{j}')
+            t = tuple(l1[i:j + 1])
+            inter = tuple(i1[i:j])
+
+            if (t, inter) in B1:
+                B1[(t, inter)].append(i)
+                continue
+            
+            t_ = (-x for x in reversed(t))
+            inter_ = tuple(reversed(t))
+            if signaled and (t_, inter_) in B1:
+                B1[(t_, inter_)].append(i)
+                continue
+
+            pos = find_sub(list(t), l2, list(inter), i2, compare, reverse)
+            if pos:
+                if (t, inter) not in B1:
+                    B1[(t, inter)] = []
+                    B2[(t, inter)] = []
+                B1[(t, inter)].append(i)
+                B2[(t, inter)].extend(pos)
+            else:
+                break
+
+    return (B1, B2)
+
 def substrings_to_blocks(B1, B2):
     B = []
     for t in B1:
         B.extend(product((t,), B1[t], B2[t]))
+    # print(B)
     return B
 
 def get_abundant_chars(l1,l2):
@@ -92,15 +126,20 @@ def get_abundant_chars(l1,l2):
         for char in s:
             c = abs(char)
             all_chars.add(c)
-            if c not in counts[i]: counts[i][c] = 0
+            if c not in counts[i]:
+                counts[i][c] = 0
             counts[i][c] += 1
 
     abundant = (set(),set())
     for char in all_chars:
         c1 = counts[0].get(char, 0)
         c2 = counts[1].get(char, 0)
-        if c1 > c2: abundant[0].add(char)
-        elif c2 > c1: abundant[1].add(char)
+        if c1 > c2:
+            abundant[0].add(char)
+            abundant[0].add(-char)
+        elif c2 > c1:
+            abundant[1].add(char)
+            abundant[1].add(-char)
     return abundant
 
 def _find_abundant_run_from(string, start, abundant):
@@ -118,7 +157,7 @@ def _get_all_exclusive_substrs(substring, idx):
     blocks = []
     for i in range(len(substring)):
         for j in range(i + 1, len(substring) + 1):
-            blocks.append((i + idx, substring[i:j]))
+            blocks.append((substring[i:j], i + idx))
     return blocks
 
 def get_exclusive_blocks(string, abundant):
@@ -128,5 +167,5 @@ def get_exclusive_blocks(string, abundant):
         idx, sub = _find_abundant_run_from(string, i, abundant)
         if sub == None: break
         blocks.extend(_get_all_exclusive_substrs(sub, idx))
-        i += idx + len(sub)
+        i = idx + len(sub)
     return blocks

@@ -2,7 +2,7 @@ import gurobipy as gp
 from gurobipy import GRB
 
 from .base_ilp import BaseILP, EPS
-from ..utils.inter import (compare, find_substrings, get_abundant_chars,
+from ..utils.inter import (compare, find_substrings2, get_abundant_chars,
                            get_exclusive_blocks)
 
 
@@ -13,7 +13,7 @@ class Substring_ILP(BaseILP):
         self.balanced = balanced
         self.mod = self.balanced and mod
 
-        self.B1, self.B2 = find_substrings(self.l1, self.l2,self.i1, self.i2, self.compare,
+        self.B1, self.B2 = find_substrings2(self.l1, self.l2,self.i1, self.i2, self.compare,
                                         self.reverse, self.signaled)
         excl1, excl2 = get_abundant_chars(self.l1, self.l2)
         self.E1 = get_exclusive_blocks(self.l1, excl1)
@@ -28,7 +28,7 @@ class Substring_ILP(BaseILP):
             y[t] = dict()
             for k in ks:
                 y[t][k] = self.model.addVar(
-                    0,1,1 if nB == 1 else 0,GRB.BINARY,f'y{nB}_{t}_{k}')
+                    0,1,1 if nB == 1 else 0,GRB.BINARY)#,f'y{nB}_{t}_{k}')
         return y
     
     def _add_exclusive_vars(self):
@@ -36,19 +36,19 @@ class Substring_ILP(BaseILP):
             self.x1 = []
             self.x2 = []
             for t, k in self.E1:
-                self.x1.append(self.model.addVar(0,1,1,GRB.BINARY, f'x1_{t}_{k}'))
+                self.x1.append(self.model.addVar(0,1,1,GRB.BINARY))#, f'x1_{t}_{k}'))
             for t, k in self.E2:
-                self.x2.append(self.model.addVar(0,1,1,GRB.BINARY, f'x2_{t}_{k}'))
+                self.x2.append(self.model.addVar(0,1,1,GRB.BINARY))#, f'x2_{t}_{k}'))
 
     def _add_char_constrs(self,B,y,nB):
         for j in range(len(self.l1)):
             expr = sum(
                 sum(y[t][k]
                     for k in ks
-                    if k <= j < k + len(t))
+                    if k <= j < k + len(t[0]))
                 for t, ks in B.items())
             if not self.balanced:
-                E, x = (self.E1, self.y1) if nB == 1 else (self.E2, self.y2)
+                E, x = (self.E1, self.x1) if nB == 1 else (self.E2, self.x2)
                 expr += sum(
                     x[i]
                     for i, (t, k) in enumerate(E)

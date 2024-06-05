@@ -2,7 +2,7 @@ import gurobipy as gp
 from gurobipy import GRB
 
 from .base_ilp import BaseILP, EPS
-from ..utils.inter import (find_substrings, substrings_to_blocks, compare,
+from ..utils.inter import (find_substrings2, substrings_to_blocks, compare,
                            get_abundant_chars, get_exclusive_blocks)
 
 
@@ -13,7 +13,7 @@ class Block_ILP(BaseILP):
         self.balanced = balanced
         self.mod = self.balanced and mod
 
-        B1, B2 = find_substrings(self.l1, self.l2, self.i1, self.i2,
+        B1, B2 = find_substrings2(self.l1, self.l2, self.i1, self.i2,
                                  self.compare, self.reverse, self.signaled)
         self.B = substrings_to_blocks(B1, B2)
         excl1, excl2 = get_abundant_chars(self.l1, self.l2)
@@ -28,7 +28,7 @@ class Block_ILP(BaseILP):
             expr = sum(
                 self.x[i]
                 for i, (t,*k) in enumerate(self.B)
-                if k[b] <= j < k[b] + len(t))
+                if k[b] <= j < k[b] + len(t[0]))
             if not self.balanced:
                 E, y = (self.E1, self.y1) if nB == 1 else (self.E2, self.y2)
                 expr += sum(
@@ -42,14 +42,14 @@ class Block_ILP(BaseILP):
         self.x = []
         for t, k1, k2 in self.B:
             self.x.append(
-                self.model.addVar(0, 1, 1, GRB.BINARY, f'x_{t}_{k1}_{k2}'))
+                self.model.addVar(0, 1, 1, GRB.BINARY))#, f'x_{t}_{k1}_{k2}'))
         if not self.balanced:
             self.y1 = []
             self.y2 = []
             for t, k in self.E1:
-                self.y1.append(self.model.addVar(0,1,1,GRB.BINARY, f'y1_{t}_{k}'))
+                self.y1.append(self.model.addVar(0,1,1,GRB.BINARY))#, f'y1_{t}_{k}'))
             for t, k in self.E2:
-                self.y2.append(self.model.addVar(0,1,1,GRB.BINARY, f'y2_{t}_{k}'))
+                self.y2.append(self.model.addVar(0,1,1,GRB.BINARY))#, f'y2_{t}_{k}'))
 
     def _add_constraints(self):
         self._add_char_constrs(1)
